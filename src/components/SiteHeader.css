@@ -1,0 +1,137 @@
+.site-header {
+  position: relative;
+  z-index: 1;
+  min-height: 72px;
+  border-bottom: 1px solid rgba(230, 226, 241, 0.9);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 4px 18px rgba(48, 38, 91, 0.05);
+}
+
+.site-header-inner {
+  display: grid;
+  width: min(100% - 48px, 1180px);
+  min-height: 72px;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 24px;
+  margin: 0 auto;
+}
+
+.site-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #40366f;
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.site-header-brand-mark {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 10px;
+  color: white;
+  background: linear-gradient(135deg, #7562cf, #4b3a9d);
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.site-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.site-header-link {
+  padding: 9px 13px;
+  border-radius: 9px;
+  color: #777486;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
+}
+
+.site-header-link:hover,
+.site-header-link.is-active {
+  color: #5948aa;
+  background: #f1effa;
+}
+
+.site-header-link:focus-visible,
+.site-header-logout.MuiButton-root:focus-visible {
+  outline: 2px solid #6553b7;
+  outline-offset: 3px;
+}
+
+.site-header-logout.MuiButton-root {
+  justify-self: end;
+  padding: 7px 15px;
+  border-color: #ddd8ef;
+  border-radius: 9px;
+  color: #5948aa;
+  font-size: 13px;
+  font-weight: 650;
+  text-transform: none;
+}
+
+.site-header-logout.MuiButton-root:hover {
+  border-color: #aaa0d4;
+  background: #f8f7fc;
+}
+
+@media (max-width: 620px) {
+  .site-header-inner {
+    width: calc(100% - 32px);
+    min-height: 68px;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+
+  .site-header {
+    min-height: 68px;
+  }
+
+  .site-header-brand {
+    font-size: 12px;
+  }
+
+  .site-header-brand-mark {
+    width: 30px;
+    height: 30px;
+  }
+
+  .site-header-nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: center;
+    gap: 4px;
+    padding-bottom: 8px;
+  }
+
+  .site-header-inner {
+    padding-top: 8px;
+  }
+
+  .site-header-link {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .site-header-logout.MuiButton-root {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header-link {
+    transition: none;
+  }
+}

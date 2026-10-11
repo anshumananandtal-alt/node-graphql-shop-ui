@@ -1,0 +1,202 @@
+.product-listing-page {
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100svh - 72px);
+  overflow: hidden;
+  padding: 48px 24px 76px;
+  box-sizing: border-box;
+  color: #242137;
+  background:
+    radial-gradient(ellipse at 12% 14%, rgba(202, 190, 255, 0.42), transparent 34%),
+    radial-gradient(ellipse at 90% 88%, rgba(255, 216, 195, 0.48), transparent 30%),
+    #f7f6fb;
+  text-align: left;
+}
+
+.product-listing-page::before,
+.product-listing-page::after {
+  position: absolute;
+  z-index: -1;
+  width: 260px;
+  height: 260px;
+  border: 1px solid rgba(107, 83, 194, 0.1);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.product-listing-page::before {
+  top: -155px;
+  right: 8%;
+}
+
+.product-listing-page::after {
+  bottom: -180px;
+  left: 5%;
+  width: 340px;
+  height: 340px;
+}
+
+.product-listing-shell {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+}
+
+.product-listing-heading {
+  margin: 12px 0 32px;
+}
+
+.product-listing-heading-content {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.product-listing-add-button.MuiButton-root {
+  flex-shrink: 0;
+  border-radius: 10px;
+  font-weight: 650;
+  text-transform: none;
+}
+
+.product-listing-eyebrow {
+  margin: 0 0 8px;
+  color: #7565bf;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+}
+
+.product-listing-heading h1 {
+  margin: 0;
+  color: #242137;
+  font-size: clamp(30px, 5vw, 42px);
+  font-weight: 700;
+  letter-spacing: -1px;
+  line-height: 1.2;
+}
+
+.product-listing-description {
+  margin: 10px 0 0;
+  color: #777486;
+  font-size: 15px;
+}
+
+.product-listing-grid {
+  align-items: stretch;
+}
+
+.product-listing-grid > .MuiGrid-root {
+  display: flex;
+}
+
+.product-card.MuiCard-root {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(230, 226, 241, 0.9);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 34px rgba(48, 38, 91, 0.08);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.product-card.MuiCard-root:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 38px rgba(48, 38, 91, 0.14);
+}
+
+.product-card .MuiCardMedia-root {
+  height: 220px;
+  background: #efedf6;
+  object-fit: cover;
+}
+
+.product-card .MuiCardContent-root {
+  padding: 22px;
+}
+
+.product-card .MuiCardContent-root h2 {
+  margin: 0 0 10px;
+  color: #242137;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.25px;
+  line-height: 1.3;
+}
+
+.product-card .MuiCardContent-root p {
+  color: #777486;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.product-card .MuiCardContent-root p:last-child {
+  color: #5948aa;
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.product-listing-message {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  border: 1px solid rgba(230, 226, 241, 0.9);
+  border-radius: 16px;
+  color: #777486;
+  background: rgba(255, 255, 255, 0.78);
+  box-sizing: border-box;
+}
+
+.product-listing-message .MuiCircularProgress-root {
+  color: #6553b7;
+}
+
+.product-listing-alert {
+  border-radius: 12px;
+}
+
+.product-listing-footer {
+  position: absolute;
+  right: 16px;
+  bottom: 24px;
+  left: 16px;
+  color: #89869a;
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .product-listing-page {
+    padding: 28px 16px 68px;
+    min-height: calc(100svh - 68px);
+  }
+
+  .product-listing-heading {
+    margin: 12px 0 26px;
+  }
+
+  .product-listing-heading-content {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .product-listing-heading h1 {
+    font-size: clamp(28px, 8vw, 36px);
+  }
+
+  .product-card .MuiCardMedia-root {
+    height: 200px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-card.MuiCard-root {
+    transition: none;
+  }
+}
