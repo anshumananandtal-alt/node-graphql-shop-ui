@@ -6,7 +6,12 @@ import CardMedia from "@mui/material/CardMedia";
 import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import {
+  Link as RouterLink,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { URL_PREFIX } from "../constants";
 import { ensureMutationSucceeded, requestGraphQL } from "../utils/graphql";
 import { getSessionRole } from "../utils/session";
@@ -28,6 +33,7 @@ function getProductQuery() {
 
 function ProductDetail() {
   const { productId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const isAdmin = getSessionRole() === "admin";
   const [product, setProduct] = useState(null);
@@ -215,6 +221,10 @@ function ProductDetail() {
                     <Button
                       component={RouterLink}
                       to={`/products/${encodeURIComponent(product._id)}/edit`}
+                      state={{
+                        productListingPage:
+                          location.state?.productListingPage,
+                      }}
                       variant="outlined"
                     >
                       Edit product

@@ -5,7 +5,7 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import ProductPagination from "../components/ProductPagination";
 import { GRAPHQL_ENDPOINT } from "../constants";
@@ -32,9 +32,13 @@ const PRODUCTS_QUERY = `
 `;
 
 function ProductListing() {
+  const location = useLocation();
   const isAdmin = getSessionRole() === "admin";
   const [products, setProducts] = useState([]);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => {
+    const listingPage = location.state?.productListingPage;
+    return Number.isInteger(listingPage) && listingPage > 0 ? listingPage : 1;
+  });
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -155,6 +159,7 @@ function ProductListing() {
                 <ProductCard
                   product={product}
                   isAdmin={isAdmin}
+                  productListingPage={page}
                   onDeleted={(deletedId) =>
                     setProducts((currentProducts) =>
                       currentProducts.filter((item) => item._id !== deletedId),

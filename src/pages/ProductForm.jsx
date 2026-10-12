@@ -9,6 +9,7 @@ import Typography from "@mui/material/Typography";
 import {
   Link as RouterLink,
   Navigate,
+  useLocation,
   useNavigate,
   useParams,
 } from "react-router-dom";
@@ -45,6 +46,7 @@ function graphQLString(value) {
 
 function ProductForm({ editing = false }) {
   const { productId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const currentUserId = getSessionUserId();
     const isAdmin = getSessionRole() === "admin";
@@ -134,45 +136,49 @@ function ProductForm({ editing = false }) {
         throw new Error("Choose an image for this product.");
       }
 
-      const formData = new FormData();
+      let imageUrl = values.imageUrl.trim();
       if (imageFile) {
+        const formData = new FormData();
         formData.append("image", imageFile);
-      }
       if (editing) {
         formData.append("imageUrl", values.imageUrl);
       }
-
-      const imageResponse = await fetch(`${URL_PREFIX}/post-image`, {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
-      let imageResult;
-      try {
-        imageResult = await imageResponse.json();
-      } catch {
-        throw new Error(
-          imageResponse.ok
-            ? "The image upload response was invalid."
-            : `Image upload failed (${imageResponse.status}).`,
-        );
-      }
-      if (!imageResponse.ok) {
-        throw new Error(
-          imageResult?.message || `Image upload failed (${imageResponse.status}).`,
-        );
-      }
-      if (
-        typeof imageResult?.imageUrl !== "string" ||
-        !imageResult.imageUrl.trim()
-      ) {
-        throw new Error("The image upload response did not include an image URL.");
+        const imageResponse = await fetch(`${URL_PREFIX}/post-image`, {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        });
+        let imageResult;
+        try {
+          imageResult = await imageResponse.json();
+        } catch {
+          throw new Error(
+            imageResponse.ok
+              ? "The image upload response was invalid."
+              : `Image upload failed (${imageResponse.status}).`,
+          );
+        }
+        if (!imageResponse.ok) {
+          throw new Error(
+            imageResult?.message ||
+              `Image upload failed (${imageResponse.status}).`,
+          );
+        }
+        if (
+          typeof imageResult?.imageUrl !== "string" ||
+          !imageResult.imageUrl.trim()
+        ) {
+          throw new Error(
+            "The image upload response did not include an image URL.",
+          );
+        }
+        imageUrl = imageResult.imageUrl.trim();
       }
 
       const userInput = `{
         title: ${graphQLString(values.title.trim())}
         description: ${graphQLString(values.description.trim())}
-        imageUrl: ${graphQLString(imageResult.imageUrl.trim())}
+        imageUrl: ${graphQLString(imageUrl)}
         price: ${price}
       }`;
       const operation = editing
@@ -192,7 +198,12 @@ function ProductForm({ editing = false }) {
         throw new Error("The product response did not include the saved product.");
       }
 
-      navigate("/products", { replace: true });
+      navigate("/products", {
+        replace: true,
+        state: {
+          productListingPage: location.state?.productListingPage,
+        },
+      });
     } catch (error) {
       setErrorMessage(
         error instanceof Error

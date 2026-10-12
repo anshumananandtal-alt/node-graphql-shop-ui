@@ -7,7 +7,7 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useForm } from "react-hook-form";
-import { Link as RouterLink, useParams } from "react-router-dom";
+import { Link as RouterLink, useParams, useNavigate } from "react-router-dom";
 import RHFTextField from "../components/RHFTextField";
 import { ensureMutationSucceeded, requestGraphQL } from "../utils/graphql";
 import "./Login.css";
@@ -33,6 +33,7 @@ const POST_NEW_PASSWORD_MUTATION = `
 
 function NewPasswordPage() {
   const { token } = useParams();
+  const navigate = useNavigate()
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,6 +108,7 @@ function NewPasswordPage() {
       }
 
       setSuccessMessage(result.message);
+      navigate("/login", { replace: true})
     } catch (error) {
       setErrorMessage(
         error instanceof Error

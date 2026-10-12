@@ -19,6 +19,7 @@ import { ensureMutationSucceeded, requestGraphQL } from "../utils/graphql";
 function ProductCard({
   product,
   isAdmin,
+  productListingPage,
   onDeleted,
   isFavourite = false,
   onFavouriteRemoved,
@@ -138,6 +139,7 @@ function ProductCard({
       <CardActionArea
         component={RouterLink}
         to={`/products/${encodeURIComponent(_id)}`}
+        state={{ productListingPage }}
         aria-label={`View ${title}`}
       >
         {resolvedImageUrl ? (
@@ -204,6 +206,7 @@ function ProductCard({
             <Button
               component={RouterLink}
               to={`/products/${encodeURIComponent(_id)}/edit`}
+              state={{ productListingPage }}
               fullWidth
               variant="outlined"
             >
