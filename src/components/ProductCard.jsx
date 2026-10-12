@@ -8,11 +8,23 @@ import CardMedia from "@mui/material/CardMedia";
 import { useState } from "react";
 import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
-import { URL_PREFIX } from "../constants";
+import "./ProductCard.css";
+import {
+  ADD_TO_FAVOURITE_MUTATION,
+  DELETE_FAVOURITE_MUTATION,
+  URL_PREFIX,
+} from "../constants";
 import { ensureMutationSucceeded, requestGraphQL } from "../utils/graphql";
 
-function ProductCard({ product, isOwner, onDeleted }) {
+function ProductCard({
+  product,
+  isAdmin,
+  onDeleted,
+  isFavourite = false,
+  onFavouriteRemoved,
+}) {
   const { _id, title, imageUrl, description, price } = product;
+  console.log('#prod', product)
   const imagePath = imageUrl?.replaceAll("\\", "/");
   const resolvedImageUrl = imagePath
     ? /^https?:\/\//i.test(imagePath)
@@ -21,7 +33,55 @@ function ProductCard({ product, isOwner, onDeleted }) {
     : null;
   const [isAdding, setIsAdding] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdatingFavourite, setIsUpdatingFavourite] = useState(false);
+  const [isAddedToFavourites, setIsAddedToFavourites] = useState(isFavourite);
   const [notice, setNotice] = useState(null);
+
+  async function updateFavourite() {
+    setNotice(null);
+    setIsUpdatingFavourite(true);
+    try {
+      const mutation = isAddedToFavourites
+        ? DELETE_FAVOURITE_MUTATION
+        : ADD_TO_FAVOURITE_MUTATION;
+      const data = await requestGraphQL(mutation, {
+        variables: { prodId: _id },
+      });
+      const result = isAddedToFavourites
+        ? data?.deleteFavourite
+        : data?.addToFavourite;
+      ensureMutationSucceeded(
+        result,
+        isAddedToFavourites
+          ? "remove this product from favourites"
+          : "add this product to favourites",
+      );
+
+      if (isAddedToFavourites) {
+        onFavouriteRemoved?.(_id);
+      } else {
+        setIsAddedToFavourites(true);
+      }
+      setNotice({
+        severity: "success",
+        message:
+          result.message ||
+          (isAddedToFavourites
+            ? "Product removed from favourites."
+            : "Product added to favourites."),
+      });
+    } catch (error) {
+      setNotice({
+        severity: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unable to update favourites.",
+      });
+    } finally {
+      setIsUpdatingFavourite(false);
+    }
+  }
 
   async function addToCart() {
     setNotice(null);
@@ -35,6 +95,7 @@ function ProductCard({ product, isOwner, onDeleted }) {
       setNotice({
         severity: "success",
         message: result.message || "Product added to cart.",
+        _id
       });
     } catch (error) {
       setNotice({
@@ -117,13 +178,28 @@ function ProductCard({ product, isOwner, onDeleted }) {
       </CardActionArea>
       <Box sx={{ display: "grid", gap: 1, padding: "0 22px 22px" }}>
         <Button
+          disabled={isUpdatingFavourite}
+          onClick={updateFavourite}
+          variant="outlined"
+        >
+          {isUpdatingFavourite
+            ? "Updating..."
+            : isAddedToFavourites
+              ? "Remove from favourites"
+              : "Add to favourites"}
+        </Button>
+        <Button
           disabled={isAdding}
           onClick={addToCart}
           variant="contained"
         >
-          {isAdding ? "Adding..." : "Add to cart"}
+          {isAdding
+            ? "Adding..."
+            : _id === notice?._id && notice.severity === "success"
+              ? "Go to cart"
+              : "Add to cart"}
         </Button>
-        {isOwner && (
+        {isAdmin && (
           <Box sx={{ display: "flex", gap: 1 }}>
             <Button
               component={RouterLink}

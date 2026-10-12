@@ -9,7 +9,7 @@ import Typography from "@mui/material/Typography";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { URL_PREFIX } from "../constants";
 import { ensureMutationSucceeded, requestGraphQL } from "../utils/graphql";
-import { getSessionUserId } from "../utils/session";
+import { getSessionRole } from "../utils/session";
 import "./ProductDetail.css";
 
 function getProductQuery() {
@@ -21,10 +21,6 @@ function getProductQuery() {
         imageUrl
         description
         price
-        userId {
-          _id
-          name
-        }
       }
     }
   `;
@@ -33,20 +29,13 @@ function getProductQuery() {
 function ProductDetail() {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const currentUserId = getSessionUserId();
+  const isAdmin = getSessionRole() === "admin";
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [notice, setNotice] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const isOwner =
-    String(
-      product?.userId?._id ??
-        product?.user?.userId ??
-        product?.userId ??
-        "",
-    ) === String(currentUserId ?? "");
   const imagePath = product?.imageUrl?.replaceAll("\\", "/");
   const imageUrl = imagePath
     ? /^https?:\/\//i.test(imagePath)
@@ -221,7 +210,7 @@ function ProductDetail() {
                 >
                   {isAdding ? "Adding..." : "Add to cart"}
                 </Button>
-                {isOwner && (
+                {isAdmin && (
                   <>
                     <Button
                       component={RouterLink}

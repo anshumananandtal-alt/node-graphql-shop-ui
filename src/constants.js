@@ -4,6 +4,7 @@ export const LOGIN_MUTATION = `
     postLogin(email: $email, password: $password) {
       token
       userId
+      role
     }
   }
 `;
@@ -22,6 +23,7 @@ export const SIGNUP_MUTATION = `
     ) {
       token
       userId
+      role
     }
   }
 `;
@@ -34,8 +36,43 @@ export const LOGOUT_MUTATION = `
   }
 `;
 
+export const FAVOURITES_QUERY = `
+  query {
+    favourites {
+      items {
+        _id
+        productId {
+          _id
+          title
+          description
+          price
+          imageUrl
+        }
+      }
+    }
+  }
+`;
+export const ADD_TO_FAVOURITE_MUTATION = `
+  mutation AddToFavourite($prodId: String!) {
+    addToFavourite(prodId: $prodId) {
+      message
+      status
+      productId
+    }
+  }
+`;
+export const DELETE_FAVOURITE_MUTATION = `
+  mutation DeleteFavourite($prodId: String!) {
+    deleteFavourite(prodId: $prodId) {
+      message
+      status
+    }
+  }
+`;
+
 export const TOKEN_KEY = "token";
 export const USER_ID_KEY = "userId";
+export const ROLE = "role";
 export const TOKEN_EXPIRY_KEY = "tokenExpiresAt";
 export const CHECKOUT_SESSION_ID_KEY = "checkoutSessionId";
 export const SESSION_DURATION_MS = 60 * 60 * 1000;

@@ -59,8 +59,11 @@ function Login() {
       if (typeof userId !== "string" || userId.length === 0) {
         throw new Error("The login response did not include a user ID.");
       }
-
-      saveSession(token, userId);
+      const role = result?.data?.postLogin?.role
+      if (typeof role !== "string" || role.length === 0) {
+        throw new Error("The login response did not include a role");
+      }
+      saveSession(token, userId, role);
       navigate("/products", { replace: true });
     } catch (error) {
       setErrorMessage(

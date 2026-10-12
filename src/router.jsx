@@ -12,6 +12,7 @@ import Cart from "./pages/Cart.jsx";
 import Checkout from "./pages/Checkout.jsx";
 import CheckoutFail from "./pages/CheckoutFail.jsx";
 import CheckoutSuccess from "./pages/CheckoutSuccess.jsx";
+import Favourites from "./pages/Favourites.jsx";
 import ProductForm from "./pages/ProductForm.jsx";
 import Login from "./pages/Login.jsx";
 import Orders from "./pages/Orders.jsx";
@@ -28,6 +29,8 @@ const routeElements = routes.map(({ route, type, component }) => {
       <Login />
     ) : component === "Cart" ? (
       <Cart />
+    ) : component === "Favourites" ? (
+      <Favourites />
     ) : component === "Checkout" ? (
       <Checkout />
     ) : component === "CheckoutSuccess" ? (

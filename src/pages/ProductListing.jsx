@@ -9,7 +9,7 @@ import { Link as RouterLink } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import ProductPagination from "../components/ProductPagination";
 import { GRAPHQL_ENDPOINT } from "../constants";
-import { getSessionUserId } from "../utils/session";
+import { getSessionRole } from "../utils/session";
 import "./ProductListing.css";
 
 const PRODUCTS_QUERY = `
@@ -32,7 +32,7 @@ const PRODUCTS_QUERY = `
 `;
 
 function ProductListing() {
-  const currentUserId = getSessionUserId();
+  const isAdmin = getSessionRole() === "admin";
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -116,14 +116,16 @@ function ProductListing() {
                 Thoughtfully selected products for the things you love.
               </Typography>
             </Box>
-            <Button
-              component={RouterLink}
-              to="/products/add"
-              className="product-listing-add-button"
-              variant="contained"
-            >
-              Add product
-            </Button>
+            {isAdmin && (
+              <Button
+                component={RouterLink}
+                to="/products/add"
+                className="product-listing-add-button"
+                variant="contained"
+              >
+                Add product
+              </Button>
+            )}
           </Box>
         </Box>
 
@@ -152,10 +154,7 @@ function ProductListing() {
               <Grid key={product._id} size={{ xs: 12, sm: 6, md: 4 }}>
                 <ProductCard
                   product={product}
-                  isOwner={
-                    String(product.userId?._id ?? "") ===
-                    String(currentUserId ?? "")
-                  }
+                  isAdmin={isAdmin}
                   onDeleted={(deletedId) =>
                     setProducts((currentProducts) =>
                       currentProducts.filter((item) => item._id !== deletedId),

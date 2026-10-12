@@ -45,6 +45,11 @@ const routes = [
     component: "Cart",
   },
   {
+    route: "/favourites",
+    type: "Protected",
+    component: "Favourites",
+  },
+  {
     route: "/checkout",
     type: "Protected",
     component: "Checkout",

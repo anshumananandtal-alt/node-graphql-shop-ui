@@ -6,9 +6,15 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import {
+  Link as RouterLink,
+  Navigate,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+import { URL_PREFIX } from "../constants";
 import { ensureMutationSucceeded, requestGraphQL } from "../utils/graphql";
-import { getSessionUserId } from "../utils/session";
+import { getSessionUserId, getSessionRole } from "../utils/session";
 
 const PRODUCT_QUERY = `
   query Product($_id: String!) {
@@ -41,13 +47,15 @@ function ProductForm({ editing = false }) {
   const { productId } = useParams();
   const navigate = useNavigate();
   const currentUserId = getSessionUserId();
+    const isAdmin = getSessionRole() === "admin";
   const [values, setValues] = useState(initialValues);
+  const [imageFile, setImageFile] = useState(null);
   const [isLoading, setIsLoading] = useState(editing);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    if (!editing) {
+    if (!isAdmin || !editing) {
       return undefined;
     }
 
@@ -96,11 +104,15 @@ function ProductForm({ editing = false }) {
 
     loadProduct();
     return () => controller.abort();
-  }, [currentUserId, editing, productId]);
+  }, [currentUserId, editing, isAdmin, productId]);
 
   function updateField(event) {
     const { name, value } = event.target;
     setValues((current) => ({ ...current, [name]: value }));
+  }
+
+  function updateImage(event) {
+    setImageFile(event.target.files?.[0] ?? null);
   }
 
   async function handleSubmit(event) {
@@ -118,10 +130,49 @@ function ProductForm({ editing = false }) {
         throw new Error("Enter a valid non-negative price.");
       }
 
+      if (!imageFile && !values.imageUrl) {
+        throw new Error("Choose an image for this product.");
+      }
+
+      const formData = new FormData();
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
+      if (editing) {
+        formData.append("imageUrl", values.imageUrl);
+      }
+
+      const imageResponse = await fetch(`${URL_PREFIX}/post-image`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      let imageResult;
+      try {
+        imageResult = await imageResponse.json();
+      } catch {
+        throw new Error(
+          imageResponse.ok
+            ? "The image upload response was invalid."
+            : `Image upload failed (${imageResponse.status}).`,
+        );
+      }
+      if (!imageResponse.ok) {
+        throw new Error(
+          imageResult?.message || `Image upload failed (${imageResponse.status}).`,
+        );
+      }
+      if (
+        typeof imageResult?.imageUrl !== "string" ||
+        !imageResult.imageUrl.trim()
+      ) {
+        throw new Error("The image upload response did not include an image URL.");
+      }
+
       const userInput = `{
         title: ${graphQLString(values.title.trim())}
         description: ${graphQLString(values.description.trim())}
-        imageUrl: ${graphQLString(values.imageUrl.trim())}
+        imageUrl: ${graphQLString(imageResult.imageUrl.trim())}
         price: ${price}
       }`;
       const operation = editing
@@ -151,6 +202,10 @@ function ProductForm({ editing = false }) {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/products" replace />;
   }
 
   return (
@@ -222,12 +277,28 @@ function ProductForm({ editing = false }) {
                 onChange={updateField}
                 value={values.description}
               />
-              <TextField
-                label="Image URL or path"
-                name="imageUrl"
-                onChange={updateField}
-                value={values.imageUrl}
-              />
+              <Box>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  sx={{ textTransform: "none" }}
+                >
+                  {imageFile ? "Choose a different image" : "Upload image"}
+                  <input
+                    accept="image/*"
+                    hidden
+                    onChange={updateImage}
+                    type="file"
+                  />
+                </Button>
+                <Typography color="text.secondary" sx={{ mt: 1 }} variant="body2">
+                  {imageFile
+                    ? imageFile.name
+                    : editing && values.imageUrl
+                      ? "The current image will be kept unless you upload a replacement."
+                      : "Choose an image file."}
+                </Typography>
+              </Box>
               <TextField
                 required
                 label="Price"

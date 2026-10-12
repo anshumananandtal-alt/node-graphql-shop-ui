@@ -6,11 +6,13 @@ import {
   LOGOUT_MUTATION,
   TOKEN_KEY,
 } from "../constants";
+import { ensureMutationSucceeded } from "../utils/graphql";
 import { clearSession } from "../utils/session";
 import "./SiteHeader.css";
 
 const navigationItems = [
   { label: "Products", to: "/products" },
+  { label: "Favourites", to: "/favourites" },
   { label: "Cart", to: "/cart" },
   { label: "Orders", to: "/orders" },
 ];
@@ -44,11 +46,14 @@ function SiteHeader() {
         if (result.errors?.length) {
           throw new Error(result.errors.map(({ message }) => message).join(" "));
         }
-        if(result?.data?.postLogout?.status == 200){
-            clearSession();
-            navigate("/login", { replace: true });
+        const logoutResult = result.data?.postLogout;
+        if (!logoutResult) {
+          throw new Error("The logout response did not include a result.");
         }
 
+        ensureMutationSucceeded(logoutResult, "log out");
+        clearSession();
+        navigate("/login", { replace: true });
       } catch (error) {
         console.error(
           "Logout failed:",
