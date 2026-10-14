@@ -69,6 +69,22 @@ export const DELETE_FAVOURITE_MUTATION = `
     }
   }
 `;
+export const CART_QUERY = `
+  query {
+    carts {
+      items {
+        productId {
+          _id
+          title
+          description
+          imageUrl
+          price
+        }
+        quantity
+      }
+    }
+  }
+`;
 
 export const TOKEN_KEY = "token";
 export const USER_ID_KEY = "userId";

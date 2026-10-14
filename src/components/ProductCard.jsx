@@ -6,37 +6,65 @@ import CardActionArea from "@mui/material/CardActionArea";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
 import "./ProductCard.css";
 import {
   ADD_TO_FAVOURITE_MUTATION,
+  CART_QUERY,
   DELETE_FAVOURITE_MUTATION,
   URL_PREFIX,
 } from "../constants";
+import {
+  addToCart as addCartItem,
+  decreaseQuantity,
+  increaseQuantity,
+  removeFromCart,
+  setCartItems,
+} from "../../reduxStore/reducer/cart";
 import { ensureMutationSucceeded, requestGraphQL } from "../utils/graphql";
 
 function ProductCard({
   product,
   isAdmin,
+  isCartLoading = false,
   productListingPage,
   onDeleted,
   isFavourite = false,
   onFavouriteRemoved,
 }) {
+  const dispatch = useDispatch();
+  const cartItems = useSelector((state) => state.cart.items ?? []);
   const { _id, title, imageUrl, description, price } = product;
-  console.log('#prod', product)
+  const cartItem = cartItems.find(
+    (item) =>
+      (item?.productId?._id ?? item?.productId)?.toString() === _id?.toString(),
+  );
+  const quantity = cartItem?.quantity ?? 0;
   const imagePath = imageUrl?.replaceAll("\\", "/");
   const resolvedImageUrl = imagePath
     ? /^https?:\/\//i.test(imagePath)
       ? imagePath
       : `${URL_PREFIX}/${imagePath.replace(/^\/+/, "")}`
     : null;
-  const [isAdding, setIsAdding] = useState(false);
+  const [isUpdatingCart, setIsUpdatingCart] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingFavourite, setIsUpdatingFavourite] = useState(false);
   const [isAddedToFavourites, setIsAddedToFavourites] = useState(isFavourite);
   const [notice, setNotice] = useState(null);
+
+  async function addCartProduct() {
+    const data = await requestGraphQL(
+      `mutation AddToCart($productId: String!) {
+        addToCart(productId: $productId) { message status }
+      }`,
+      { variables: { productId: _id } },
+    );
+    const result = data?.addToCart;
+    ensureMutationSucceeded(result, "add this product to the cart");
+    return result;
+  }
 
   async function updateFavourite() {
     setNotice(null);
@@ -86,17 +114,13 @@ function ProductCard({
 
   async function addToCart() {
     setNotice(null);
-    setIsAdding(true);
+    setIsUpdatingCart(true);
     try {
-      const data = await requestGraphQL(
-        `mutation { addToCart(productId: ${JSON.stringify(_id)}) { message status } }`,
-      );
-      const result = data?.addToCart;
-      ensureMutationSucceeded(result, "add this product to the cart");
+      const result = await addCartProduct();
+      dispatch(addCartItem(product));
       setNotice({
         severity: "success",
         message: result.message || "Product added to cart.",
-        _id
       });
     } catch (error) {
       setNotice({
@@ -107,7 +131,49 @@ function ProductCard({
             : "Unable to add this product to the cart.",
       });
     } finally {
-      setIsAdding(false);
+      setIsUpdatingCart(false);
+    }
+  }
+
+  async function changeQuantity(direction) {
+    setNotice(null);
+    setIsUpdatingCart(true);
+    try {
+      if (direction > 0) {
+        await addCartProduct();
+        dispatch(increaseQuantity({ productId: _id }));
+      } else {
+        const data = await requestGraphQL(
+          `mutation DeleteCartItem($productId: String!) {
+            deleteCart(productId: $productId) { message status }
+          }`,
+          { variables: { productId: _id } },
+        );
+        ensureMutationSucceeded(data?.deleteCart, "decrease this product quantity");
+
+        if (quantity > 1) {
+          for (let remaining = 1; remaining < quantity; remaining += 1) {
+            await addCartProduct();
+          }
+          dispatch(decreaseQuantity({ productId: _id }));
+        } else {
+          dispatch(removeFromCart({ productId: _id }));
+        }
+      }
+    } catch (error) {
+      let message =
+        error instanceof Error
+          ? error.message
+          : "Unable to update this product quantity.";
+      try {
+        const data = await requestGraphQL(CART_QUERY);
+        dispatch(setCartItems(data.carts.items));
+      } catch (refreshError) {
+        message += ` ${refreshError instanceof Error ? refreshError.message : "The cart could not be refreshed."}`;
+      }
+      setNotice({ severity: "error", message });
+    } finally {
+      setIsUpdatingCart(false);
     }
   }
 
@@ -190,17 +256,51 @@ function ProductCard({
               ? "Remove from favourites"
               : "Add to favourites"}
         </Button>
-        <Button
-          disabled={isAdding}
-          onClick={addToCart}
-          variant="contained"
-        >
-          {isAdding
-            ? "Adding..."
-            : _id === notice?._id && notice.severity === "success"
-              ? "Go to cart"
-              : "Add to cart"}
-        </Button>
+        {quantity > 0 ? (
+          <Box sx={{ display: "grid", gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, justifyContent: 'center' }}>
+              <Button
+                aria-label={`Decrease ${title} quantity`}
+                disabled={isUpdatingCart || isCartLoading}
+                onClick={() => changeQuantity(-1)}
+                variant="outlined"
+              >
+                −
+              </Button>
+              <Typography
+                aria-live="polite"
+                sx={{ minWidth: 24, textAlign: "center" }}
+              >
+                {quantity}
+              </Typography>
+              <Button
+                aria-label={`Increase ${title} quantity`}
+                disabled={isUpdatingCart || isCartLoading}
+                onClick={() => changeQuantity(1)}
+                variant="outlined"
+              >
+                +
+              </Button>
+            </Box>
+            <Button
+              component={RouterLink}
+              disabled={isCartLoading}
+              fullWidth
+              to="/cart"
+              variant="contained"
+            >
+              Go to cart
+            </Button>
+          </Box>
+        ) : (
+          <Button
+            disabled={isUpdatingCart || isCartLoading}
+            onClick={addToCart}
+            variant="contained"
+          >
+            {isUpdatingCart ? "Adding..." : "Add to cart"}
+          </Button>
+        )}
         {isAdmin && (
           <Box sx={{ display: "flex", gap: 1 }}>
             <Button

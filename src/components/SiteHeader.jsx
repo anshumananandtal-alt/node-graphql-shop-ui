@@ -1,11 +1,15 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import { useDispatch } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   GRAPHQL_ENDPOINT,
   LOGOUT_MUTATION,
   TOKEN_KEY,
 } from "../constants";
+import { clearCart } from "../../reduxStore/reducer/cart";
+import { clearUser } from "../../reduxStore/reducer/user";
+import { clearProducts } from "../../reduxStore/reducer/product";
 import { ensureMutationSucceeded } from "../utils/graphql";
 import { clearSession } from "../utils/session";
 import "./SiteHeader.css";
@@ -18,6 +22,7 @@ const navigationItems = [
 ];
 
 function SiteHeader() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -52,6 +57,9 @@ function SiteHeader() {
         }
 
         ensureMutationSucceeded(logoutResult, "log out");
+        dispatch(clearUser());
+        dispatch(clearCart());
+        dispatch(clearProducts())
         clearSession();
         navigate("/login", { replace: true });
       } catch (error) {

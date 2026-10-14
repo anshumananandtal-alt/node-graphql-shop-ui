@@ -9,13 +9,16 @@ import Typography from "@mui/material/Typography";
 import RHFTextField from "../components/RHFTextField";
 import { GRAPHQL_ENDPOINT, LOGIN_MUTATION } from "../constants";
 import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { setUser } from "../../reduxStore/reducer/user";
 import { saveSession } from "../utils/session";
 import "./Login.css";
 
 function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -64,6 +67,7 @@ function Login() {
         throw new Error("The login response did not include a role");
       }
       saveSession(token, userId, role);
+      dispatch(setUser({ email, _id: userId, name: "" }));
       navigate("/products", { replace: true });
     } catch (error) {
       setErrorMessage(

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -8,8 +9,11 @@ import Typography from "@mui/material/Typography";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import ProductPagination from "../components/ProductPagination";
-import { GRAPHQL_ENDPOINT } from "../constants";
+import { CART_QUERY, GRAPHQL_ENDPOINT } from "../constants";
+import { deleteProduct, setProducts } from "../../reduxStore/reducer/product";
+import { setCartItems } from "../../reduxStore/reducer/cart";
 import { getSessionRole } from "../utils/session";
+import { requestGraphQL } from "../utils/graphql";
 import "./ProductListing.css";
 
 const PRODUCTS_QUERY = `
@@ -33,8 +37,9 @@ const PRODUCTS_QUERY = `
 
 function ProductListing() {
   const location = useLocation();
+  const dispatch = useDispatch();
   const isAdmin = getSessionRole() === "admin";
-  const [products, setProducts] = useState([]);
+  const products = useSelector((state) => state.products.products ?? []);
   const [page, setPage] = useState(() => {
     const listingPage = location.state?.productListingPage;
     return Number.isInteger(listingPage) && listingPage > 0 ? listingPage : 1;
@@ -42,6 +47,45 @@ function ProductListing() {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isCartLoading, setIsCartLoading] = useState(true);
+  const [cartErrorMessage, setCartErrorMessage] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function fetchCart() {
+      setIsCartLoading(true);
+      setCartErrorMessage("");
+
+      try {
+        const data = await requestGraphQL(CART_QUERY, {
+          signal: controller.signal,
+        });
+        const cartItems = data?.carts?.items;
+
+        if (!Array.isArray(cartItems)) {
+          throw new Error("The cart response did not include a cart item list.");
+        }
+
+        dispatch(setCartItems(cartItems));
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setCartErrorMessage(
+            error instanceof Error
+              ? error.message
+              : "Unable to load your cart. Please try again.",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsCartLoading(false);
+        }
+      }
+    }
+
+    fetchCart();
+    return () => controller.abort();
+  }, [dispatch]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -85,7 +129,7 @@ function ProductListing() {
           );
         }
 
-        setProducts(result.data.products?.products);
+        dispatch(setProducts(result.data.products?.products));
         setTotalPages(result.data?.products?.totalPages);
       } catch (error) {
         if (error.name !== "AbortError") {
@@ -145,6 +189,11 @@ function ProductListing() {
             {errorMessage}
           </Alert>
         )}
+        {cartErrorMessage && (
+          <Alert className="product-listing-alert" severity="error" role="alert">
+            {cartErrorMessage} Cart actions are unavailable.
+          </Alert>
+        )}
 
         {!isLoading && !errorMessage && products.length === 0 && (
           <Box className="product-listing-message">
@@ -159,11 +208,10 @@ function ProductListing() {
                 <ProductCard
                   product={product}
                   isAdmin={isAdmin}
+                  isCartLoading={isCartLoading || Boolean(cartErrorMessage)}
                   productListingPage={page}
                   onDeleted={(deletedId) =>
-                    setProducts((currentProducts) =>
-                      currentProducts.filter((item) => item._id !== deletedId),
-                    )
+                    dispatch(deleteProduct({ _id: deletedId }))
                   }
                 />
               </Grid>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -7,24 +8,12 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
 import CartItem from "../components/CartItem";
-import { CHECKOUT_SESSION_ID_KEY, GRAPHQL_ENDPOINT } from "../constants";
-
-const CART_QUERY = `
-  query {
-    carts {
-      items {
-        productId {
-          _id
-          title
-          description
-          imageUrl
-          price
-        }
-        quantity
-      }
-    }
-  }
-`;
+import {
+  CART_QUERY,
+  CHECKOUT_SESSION_ID_KEY,
+  GRAPHQL_ENDPOINT,
+} from "../constants";
+import { removeFromCart, setCartItems } from "../../reduxStore/reducer/cart";
 
 const CHECKOUT_QUERY = `
   query { 
@@ -77,7 +66,8 @@ async function postGraphQL(query, signal, variables) {
 }
 
 function Cart({ checkout = false }) {
-  const [items, setItems] = useState([]);
+  const dispatch = useDispatch();
+  const items = useSelector((state) => state.cart.items ?? []);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingIds, setDeletingIds] = useState(() => new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -119,7 +109,7 @@ function Cart({ checkout = false }) {
           throw new Error("The cart response did not include a cart item list.");
         }
 
-        setItems(cartItems);
+        dispatch(setCartItems(cartItems));
       } catch (error) {
         if (!controller.signal.aborted) {
           setErrorMessage(
@@ -162,9 +152,7 @@ function Cart({ checkout = false }) {
         );
       }
 
-      setItems((currentItems) =>
-        currentItems.filter((item) => item.productId?._id !== productId),
-      );
+      dispatch(removeFromCart({ productId }));
     } catch (error) {
       setErrorMessage(
         error instanceof Error
