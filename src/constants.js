@@ -92,5 +92,5 @@ export const ROLE = "role";
 export const TOKEN_EXPIRY_KEY = "tokenExpiresAt";
 export const CHECKOUT_SESSION_ID_KEY = "checkoutSessionId";
 export const SESSION_DURATION_MS = 60 * 60 * 1000;
-export const URL_PREFIX = 'http://localhost:3000'
+export const URL_PREFIX = import.meta.env.VITE_AWS_BASE_URL;
 export const RESET_DURATION= 20

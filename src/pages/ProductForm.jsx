@@ -13,7 +13,6 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { URL_PREFIX } from "../constants";
 import { ensureMutationSucceeded, requestGraphQL } from "../utils/graphql";
 import { getSessionUserId, getSessionRole } from "../utils/session";
 
@@ -143,7 +142,7 @@ function ProductForm({ editing = false }) {
       if (editing) {
         formData.append("imageUrl", values.imageUrl);
       }
-        const imageResponse = await fetch(`${URL_PREFIX}/post-image`, {
+        const imageResponse = await fetch(`${import.meta.env.VITE_SERVER_URL}/post-image`, {
           method: "POST",
           credentials: "include",
           body: formData,
